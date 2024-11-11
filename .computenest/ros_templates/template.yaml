@@ -190,11 +190,7 @@ Parameters:
           Fn::Equals:
             - ExistingVPC
             - ${VpcOption}
-  Password:
-    Type: String
-    AssociationProperty: ALIYUN::ECS::Instance::Password
-    Label: 密码
-    NoEcho: True
+
 Resources:
   # 新建vpc
   EcsVpc:
@@ -289,7 +285,7 @@ Resources:
         host=$(echo $host | tr -d '"')
         docker login $host --username=$username --password=$password
         docker pull '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
-        docker run -d -p 8080:8080 -e Password=${Password} '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
+        docker run -d -p 8080:8080 '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
 
 Outputs:
   
@@ -330,9 +326,4 @@ Metadata:
           - VSwitchCidrBlock
         Label:
           default: 可用区配置
-      - Parameters:
-        - Password
-        Label:
-          en: Software Configuration
-          zh-cn: 软件配置
       
