@@ -29,6 +29,7 @@ Artifact:
     ArtifactProperty:
       RepoName: ${AcrImageBuilder.AcrImage_1.RepoName}
       Tag: ${AcrImageBuilder.AcrImage_1.Tag}
+      RepoType: Public
 AcrImageBuilder:
   AcrImage_1:
     # dockerfile路径
