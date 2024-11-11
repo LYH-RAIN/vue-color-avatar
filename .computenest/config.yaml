@@ -36,5 +36,5 @@ AcrImageBuilder:
     DockerFilePath: Dockerfile
     # 采用与image_name相同的repoName
     RepoName: lyh-rain_vue-color-avatar-dockerfile
-    Tag: 1.0.0
+    Tag: latest
     DockerBuildArgs: {}
