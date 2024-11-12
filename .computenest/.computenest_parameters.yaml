@@ -1,1 +1,1 @@
-{"DockerFilePath":"Dockerfile","ServiceType":"private","AllowedRegions":["ap-southeast-1"],"ArtifactSourceType":"Dockerfile","RepoName":"LYH-RAIN/vue-color-avatar","Arch":"EcsSingle","RegionId":"ap-southeast-1","DockerBuildArgs":{}}
+{"AdvancedOptions":false,"DockerFilePath":"Dockerfile","ServiceType":"private","AllowedRegions":["cn-hangzhou","cn-shanghai","cn-beijing"],"ArtifactSourceType":"Dockerfile","RepoName":"LYH-RAIN/vue-color-avatar","Arch":"EcsCluster","RegionId":"cn-hangzhou","NodeAmount":2,"UserDeployParameters":""}
