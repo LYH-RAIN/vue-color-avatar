@@ -3,20 +3,34 @@ Service:
   DeployType: ros
   DeployMetadata:
     SupplierDeployMetadata:
+      RoleName: ComputeNestDeploy
+      UserType: Aliyun
+      SupplierTemplateConfigs:
+        - Name: Template
+          Url: 'ros_templates/template.yaml'
+          PredefinedParameters: []
+          HiddenParameterKeys:
+            - VpcId
+            - VSwitchId
+            - ZoneId
+          ParameterMappings:
+            - ParameterKey: RegionId
+              ParameterMappingKeys:
+                - VpcId
+                - ZoneId
+                - VSwitchId
+              ParameterValueMapping:
+                cn-hangzhou:
+                  Parameters:
+                    VpcId: vpc-bp1so9xy7x7udpcb0cw3m
+                    ZoneId: cn-hangzhou-i
+                    VSwitchId: vsw-bp1fjgcmil6pmay7knyin
       AcrImageArtifactRelation:
         # 相应的，ros模板中也需要采用该伪参数
         '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}':
           ArtifactId: ${Artifact.Artifact_1.ArtifactId}
           ArtifactVersion: ${Artifact.Artifact_1.ArtifactVersion}
-    TemplateConfigs:
-      - Name: ECS单机版
-        Url: 'ros_templates/template.yaml'
-        # 未选择部署地域则采用 []
-        AllowedRegions:
-          - cn-hangzhou
-          - cn-shanghai
-          - cn-beijing
-  ServiceType: private
+  ServiceType: managed
   ServiceInfo:
     Locale: zh-CN
     ShortDescription: demo
