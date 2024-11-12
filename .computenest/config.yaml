@@ -29,7 +29,7 @@ Artifact:
     ArtifactProperty:
       RepoName: ${AcrImageBuilder.AcrImage_1.RepoName}
       Tag: ${AcrImageBuilder.AcrImage_1.Tag}
-      RepoType: Public
+      RepoType: Private
 AcrImageBuilder:
   AcrImage_1:
     # dockerfile路径
@@ -37,4 +37,4 @@ AcrImageBuilder:
     # 采用与image_name相同的repoName
     RepoName: lyh-rain_vue-color-avatar-dockerfile
     Tag: latest
-    DockerBuildArgs: {}
+    DockerBuildArgs: [{'ParameterValue': 'Viewer', 'Name': 'Scope'}]
