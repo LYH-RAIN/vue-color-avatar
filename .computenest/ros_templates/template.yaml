@@ -1,7 +1,4 @@
 ROSTemplateFormatVersion: '2015-09-01'
-Description:
-  en: Docker Service Ros Template
-  zh-cn: Docker-ECS集群版服务模板
 Conditions:
   CreateVpcConditions:
     Fn::Equals:
@@ -46,7 +43,6 @@ Parameters:
           Fn::Equals:
             - NewVPC
             - ${VpcOption}
-  # 新建ack所在的交换机的网段
   VSwitchCidrBlock:
     Type: String
     Label:
@@ -149,12 +145,6 @@ Parameters:
     MinLength: 8
     MaxLength: 30
     AssociationProperty: ALIYUN::ECS::Instance::Password
-  NodeAmount:
-    Type: Number
-    Default: 2
-    Label:
-      en: Node Amount
-      zh-cn: 节点数量
   ZoneId:
     Type: String
     Label:
@@ -167,11 +157,11 @@ Parameters:
       en: VPC ID
       zh-cn: 专有网络VPC实例ID
     AssociationProperty: 'ALIYUN::ECS::VPC::VPCId'
-    Default: ''
     Required:
       Fn::Equals:
         - ExistingVPC
         - ${VpcOption}
+    Default: ''
     AssociationPropertyMetadata:
       Visible:
         Condition:
@@ -183,8 +173,8 @@ Parameters:
     Label:
       en: VSwitch ID
       zh-cn: 交换机实例ID
-    AssociationProperty: 'ALIYUN::ECS::VSwitch::VSwitchId'
     Default: ''
+    AssociationProperty: 'ALIYUN::ECS::VSwitch::VSwitchId'
     Required:
       Fn::Equals:
         - ExistingVPC
@@ -197,48 +187,6 @@ Parameters:
           Fn::Equals:
             - ExistingVPC
             - ${VpcOption}
-  SystemDiskSize:
-    Default: 40
-    Type: Number
-    Description:
-      zh-cn: 系统盘大小, 取值范围：[40, 500], 单位：GB。
-      en: 'System disk size of each node, range of values: 40-500, units: GB.'
-    MinValue: 40
-    MaxValue: 500
-    Label:
-      zh-cn: 系统盘空间
-      en: System Disk Space
-  InternetMaxBandwidthOut:
-    Default: 10
-    Type: Number
-    Label:
-      zh-cn: 流量公网带宽
-      en: Internet Max Bandwidth Out
-    MinValue: 0
-    MaxValue: 100
-    Description:
-      zh-cn: 取值范围0-100
-      en: 'Internet Max Bandwidth Out,range of values: 0-100'
-  InternetChargeType:
-    Default: PayByTraffic
-    Type: String
-    Label:
-      zh-cn: 流量付费类型
-      en: Internet Charge Type
-    AllowedValues:
-      - PayByBandwidth
-      - PayByTraffic
-  LoadBalancerSpec:
-    Type: String
-    AssociationProperty: ALIYUN::SLB::Instance::InstanceType
-    Label:
-      en: LoadBalancer Specifications
-      zh-cn: 负载均衡实例规格
-    Description:
-      en: By default, a private SLB instance will be created for the wordpress.
-      zh-cn: 默认将为 wordpress 创建一个私网 SLB 实例，用户可修改SLB实例规格.
-    AssociationPropertyMetadata:
-      ZoneId: ZoneId
 
 
 Resources:
@@ -283,12 +231,7 @@ Resources:
   InstanceGroup:
     Type: ALIYUN::ECS::InstanceGroup
     Properties:
-      InstanceName:
-        Fn::Join:
-          - '-'
-          - - Ref: ALIYUN::StackName
-            - '[1,4]'
-      IoOptimized: optimized
+      # 付费类型
       InstanceChargeType:
         Ref: PayType
       PeriodUnit:
@@ -309,217 +252,39 @@ Resources:
         Ref: ZoneId
       SecurityGroupId:
         Ref: SecurityGroup
-      SystemDiskCategory: cloud_essd
-      SystemDiskSize:
-        Ref: SystemDiskSize
-      MaxAmount:
-        Ref: NodeAmount
       ImageId: "{{resolve:oos:aliyun/services/computenest/images/aliyun_3_2104_docker_compose_2_27_compute_nest}}"
-      InstanceType:
-        Ref: EcsInstanceType
       Password:
         Ref: InstancePassword
-      InternetMaxBandwidthOut:
-        Ref: InternetMaxBandwidthOut
-      InternetChargeType:
-        Ref: InternetChargeType
-  Slb:
-    Type: ALIYUN::SLB::LoadBalancer
-    Properties:
-      VpcId:
-        Fn::If:
-          - CreateVpcConditions
-          - Ref: EcsVpc
-          - Ref: VpcId
-      VSwitchId:
-        'Fn::If':
-          - CreateVpcConditions
-          - Ref: EcsVSwitch
-          - Ref: VSwitchId
-      LoadBalancerName:
-        Fn::Join:
-          - '-'
-          - - slb
-            - Ref: ALIYUN::StackName
-      PayType:
-        Ref: PayType
-      PricingCycle:
-        Ref: PayPeriodUnit
-      Duration:
-        Ref: PayPeriod
-      AddressType: intranet
-      LoadBalancerSpec:
-        Ref: LoadBalancerSpec
-      AutoPay: true
-  EipSlbAddress:
-    Type: ALIYUN::VPC::EIP
-    Properties:
-      Name:
-        Ref: ALIYUN::StackName
-      InternetChargeType: PayByTraffic
-      Bandwidth: 100
-  EipSlbAddressAssociation:
-    Type: ALIYUN::VPC::EIPAssociation
-    Properties:
-      InstanceId:
-        Ref: Slb
-      AllocationId:
-        Ref: EipSlbAddress
-  SlbBackendServerAttachment:
-    DependsOn:
-      - InstanceGroup
-    Type: ALIYUN::SLB::BackendServerAttachment
-    Properties:
-      BackendServerList:
-        Fn::GetAtt:
-          - InstanceGroup
-          - InstanceIds
-      LoadBalancerId:
-        Ref: Slb
-      BackendServerWeightList:
-        - 100
-        - 100
-
-  SlbListener1:
-    DependsOn:
-      - Slb
-    Type: ALIYUN::SLB::Listener
-    Properties:
-      Persistence:
-        CookieTimeout: 60
-        StickySession: 'on'
-        PersistenceTimeout: 180
-        XForwardedFor: 'off'
-        StickySessionType: insert
-      ListenerPort: 8080
-      Bandwidth: -1
-      HealthCheck:
-        HttpCode: http_2xx,http_3xx,http_4xx,http_5xx
-        HealthCheckType: tcp
-        UnhealthyThreshold: 3
-        Timeout: 5
-        HealthyThreshold: 3
-        Port: 8080
-        URI: /
-        Interval: 2
-      LoadBalancerId:
-        Ref: Slb
-      BackendServerPort: 8080
-      Protocol: tcp
-
-  EssInstanceScalingGroup:
-    Type: ALIYUN::ESS::ScalingGroup
-    DependsOn:
-      - Slb
-      
-      - SlbListener1
-      
-    Properties:
-      ScalingGroupName:
-        Fn::Join:
-          - '-'
-          - - 'asg'
-            - Ref: ALIYUN::StackName
-      RemovalPolicys:
-        - NewestInstance
-      MinSize:
-        Ref: NodeAmount
-      MaxSize: 100
-      VSwitchId:
-        'Fn::If':
-          - CreateVpcConditions
-          - Ref: EcsVSwitch
-          - Ref: VSwitchId
-      LoadBalancerIds:
-        - Ref: Slb
-      DefaultCooldown: 300
-  EcsInstanceScalingConfiguration:
-    Type: ALIYUN::ESS::ScalingConfiguration
-    Properties:
-      # 网络配置
-      SecurityGroupId:
-        Ref: SecurityGroup
-      # 伸缩组
-      ScalingGroupId:
-        Ref: EssInstanceScalingGroup
-      ScalingConfigurationName:
-        Fn::Join:
-          - '-'
-          - - 'sc'
-            - Ref: ALIYUN::StackName
-      # 实例类型
       InstanceType:
         Ref: EcsInstanceType
-      # 磁盘配置
       SystemDiskCategory: cloud_essd
-      SystemDiskSize:
-        Ref: SystemDiskSize
-      InternetMaxBandwidthOut:
-        Ref: InternetMaxBandwidthOut
-      InternetChargeType:
-        Ref: InternetChargeType
-      ImageId: "{{resolve:oos:aliyun/services/computenest/images/aliyun_3_2104_docker_compose_2_27_compute_nest}}"
-      InstanceName:
-        Fn::Join:
-          - '-'
-          - - Ref: ALIYUN::StackName
-            - 'ess-[1,3]'
-      LoadBalancerWeight: 100
-      Password:
-        Ref: InstancePassword
-      UserData:
-        Fn::Sub:
-          - |
-            dockerJson='{{ computenest::acr::dockerconfigjson }}'
-            decodeDockerJson=$(echo $dockerJson | base64 -d)
-            host=$(echo $decodeDockerJson | jq '.auths' | jq 'keys' | jq .[0])
-            username=$(echo $decodeDockerJson | jq ".auths.$host.username" | tr -d '"')
-            password=$(echo $decodeDockerJson | jq ".auths.$host.password" | tr -d '"')
-            host=$(echo $host | tr -d '"')
-            docker login $host --username=$username --password=$password
-            docker pull '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
-            docker run -d -p 8080:8080 '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
-          - RegionId:
-              Ref: ALIYUN::Region
-  EssInstanceScalingGroupEnable:
-    Type: ALIYUN::ESS::ScalingGroupEnable
-    Properties:
-      ScalingRuleArisExecuteVersion: '1'
-      ScalingConfigurationId:
-        Ref: EcsInstanceScalingConfiguration
-      InstanceIds:
-        'Fn::GetAtt':
-          - InstanceGroup
-          - InstanceIds
-      ScalingGroupId:
-        Ref: EssInstanceScalingGroup
-    DependsOn:
-      - EcsInstanceScalingConfiguration
-      - EssInstanceScalingGroup
+      SystemDiskSize: 200
+      InternetMaxBandwidthOut: 5
+      IoOptimized: optimized
+      MaxAmount: 1
   RunInstallCommand:
     Type: ALIYUN::ECS::RunCommand
     Properties:
       InstanceIds:
         Fn::GetAtt:
-        - InstanceGroup
-        - InstanceIds
+          - InstanceGroup
+          - InstanceIds
       Type: RunShellScript
       Sync: true
       Timeout: 3600
-      CommandContent:
-        Fn::Sub:
-          - |
-            dockerJson='{{ computenest::acr::dockerconfigjson }}'
-            decodeDockerJson=$(echo $dockerJson | base64 -d)
-            host=$(echo $decodeDockerJson | jq '.auths' | jq 'keys' | jq .[0])
-            username=$(echo $decodeDockerJson | jq ".auths.$host.username" | tr -d '"')
-            password=$(echo $decodeDockerJson | jq ".auths.$host.password" | tr -d '"')
-            host=$(echo $host | tr -d '"')
-            docker login $host --username=$username --password=$password
-            docker pull '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
-            docker run -d -p 8080:8080 '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
-          - RegionId:
-              Ref: ALIYUN::Region
+      CommandContent: |-
+        #!/bin/bash
+        # dockerjsonConfig解析
+        dockerJson='{{ computenest::acr::dockerconfigjson }}'
+        decodeDockerJson=$(echo $dockerJson | base64 -d)
+        host=$(echo $decodeDockerJson | jq '.auths' | jq 'keys' | jq .[0])
+        username=$(echo $decodeDockerJson | jq ".auths.$host.username" | tr -d '"')
+        password=$(echo $decodeDockerJson | jq ".auths.$host.password" | tr -d '"')
+        host=$(echo $host | tr -d '"')
+        docker login $host --username=$username --password=$password
+        docker pull '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
+        docker run -d -p 8080:8080 '{{ computenest::acrimage::LYH-RAIN_vue-color-avatar-dockerfile }}'
+
 Outputs:
   
   ServerAddress1:
@@ -544,26 +309,12 @@ Metadata:
           - PayPeriodUnit
           - PayPeriod
         Label:
-          default:
-            en: PayType Configuration
-            zh-cn: 付费类型配置
+          default: 付费类型配置
       - Parameters:
           - EcsInstanceType
-          - NodeAmount
-          - SystemDiskSize
-          - InternetChargeType
-          - InternetMaxBandwidthOut
           - InstancePassword
         Label:
-          default:
-            en: Instance Configuration
-            zh-cn: ECS实例配置
-      - Parameters:
-          - LoadBalancerSpec
-        Label:
-          default:
-            zh-cn: 负载均衡配置
-            en: Slb Configuration
+          default: 资源配置
       - Parameters:
           - ZoneId
           - VpcOption
