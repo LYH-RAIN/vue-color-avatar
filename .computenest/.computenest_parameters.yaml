@@ -1,0 +1,14 @@
+AdvancedOptions: true
+DockerFilePath: Dockerfile
+ServiceType: private
+ArtifactSourceType: Dockerfile
+ServiceBuildRegion: ap-southeast-1
+RepoName: LYH-RAIN/vue-color-avatar
+RegionId: cn-hangzhou
+CustomParameters: ''
+DockerBuildArgs:
+- ArgumentValue: latest
+  ArgumentName: VERSION
+Owner: LYH-RAIN
+Branch: asdsdas
+Platform: github
