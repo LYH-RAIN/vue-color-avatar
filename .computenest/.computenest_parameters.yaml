@@ -1,10 +1,11 @@
 AdvancedOptions: false
+RuntimeType: Container
 DockerFilePath: Dockerfile
 ServiceType: private
 ArtifactSourceType: Dockerfile
 ServiceBuildRegion: ap-southeast-1
 RepoName: LYH-RAIN/vue-color-avatar
-RegionId: ap-southeast-1
+RegionId: cn-hangzhou
 CustomParameters: ''
 Owner: LYH-RAIN
 Branch: asdsdas
